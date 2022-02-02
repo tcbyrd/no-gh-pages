@@ -1,0 +1,49 @@
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      - main
+    
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+  
+  
+name: manual page build and deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+          submodules: true
+      - name: Build page with Jekyll
+        uses: actions/jekyll-build-pages@main
+        with:
+          source: ./
+          destination: ./_site
+      - name: Archive build output
+        run: "tar --dereference --directory _site/ -cvf artifact.tar ."
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: github-pages
+          path: artifact.tar
+  deploy:
+    if: ${{ always() }}
+    environment: 
+      name: docs
+      url: https://tcbyrd.dev/no-gh-pages
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@main
