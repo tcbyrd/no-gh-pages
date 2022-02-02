@@ -39,6 +39,9 @@ jobs:
           path: artifact.tar
   deploy:
     if: ${{ always() }}
+    environment: 
+      name: "github-pages"
+      url: "https://tcbyrd.dev/no-gh-pages/"
     runs-on: ubuntu-latest
     needs: build
     steps:
